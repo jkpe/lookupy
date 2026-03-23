@@ -756,6 +756,9 @@
 
   footer a:hover { opacity: 0.8; }
 
+  footer p { margin: 0; }
+  footer p + p { margin-top: 14px; }
+
   /* Animations */
   @keyframes fadeDown {
     from { opacity: 0; transform: translateY(-20px); }
@@ -857,7 +860,8 @@
   <div id="output"></div>
 
   <footer>
-    Powered by <a href="https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/" target="_blank">Cloudflare 1.1.1.1 DNS over HTTPS</a> &mdash; queries are encrypted end-to-end
+    <p>Powered by <a href="https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/" target="_blank" rel="noopener noreferrer">Cloudflare 1.1.1.1 DNS over HTTPS</a> &mdash; queries are encrypted end-to-end</p>
+    <p>Made by <a href="https://www.jackpearce.co.uk/" target="_blank" rel="noopener noreferrer">Jack Pearce</a> ♥ · <a href="https://github.com/jkpe/lookupy" target="_blank" rel="noopener noreferrer">Open source on GitHub</a></p>
   </footer>
 
 </div>
