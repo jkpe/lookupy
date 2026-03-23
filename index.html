@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lookupy — DNS over HTTPS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0f;
+    --surface: #111318;
+    --surface2: #181b22;
+    --border: #1e2230;
+    --border2: #252b3a;
+    --cf-orange: #f6821f;
+    --cf-orange-dim: rgba(246,130,31,0.12);
+    --cf-orange-glow: rgba(246,130,31,0.25);
+    --text: #e8eaf0;
+    --text-dim: #6b7280;
+    --text-mid: #9ca3af;
+    --green: #10b981;
+    --green-dim: rgba(16,185,129,0.12);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --yellow: #fbbf24;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(246,130,31,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(246,130,31,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orb */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(246,130,31,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 52px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .cf-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .logo-text {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cf-orange);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    background: linear-gradient(135deg, #ffffff 0%, #c0c8d8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 14px;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--cf-orange) 0%, #ffb347 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 15px;
+    font-weight: 400;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+
+  /* Search form */
+  .search-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .input-group {
+    position: relative;
+    flex: 1 1 240px;
+  }
+
+  .input-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  input[type="text"], select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  input[type="text"]:focus, select:focus {
+    border-color: var(--cf-orange);
+    box-shadow: 0 0 0 3px var(--cf-orange-dim);
+  }
+
+  input[type="text"]::placeholder {
+    color: var(--text-dim);
+  }
+
+  .btn-lookup {
+    flex: 0 0 auto;
+    align-self: flex-end;
+    background: var(--cf-orange);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    padding: 13px 28px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-lookup:hover:not(:disabled) {
+    opacity: 0.9;
+    box-shadow: 0 4px 24px var(--cf-orange-glow);
+    transform: translateY(-1px);
+  }
+
+  .btn-lookup:active:not(:disabled) { transform: translateY(0); }
+  .btn-lookup:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-lookup .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  .btn-lookup.loading .spinner { display: block; }
+  .btn-lookup.loading .btn-text { display: none; }
+
+  /* Quick type chips */
+  .quick-types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  .quick-label {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    align-self: center;
+    margin-right: 4px;
+  }
+
+  .chip {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text-mid);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .chip:hover {
+    border-color: var(--cf-orange);
+    color: var(--cf-orange);
+    background: var(--cf-orange-dim);
+  }
+
+  /* Results */
+  .results {
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .results-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .results-title {
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .results-title strong {
+    color: var(--text);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .status-badge.ok {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+
+  .status-badge.err {
+    background: var(--red-dim);
+    color: var(--red);
+    border: 1px solid rgba(239,68,68,0.2);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* DNS flags */
+  .flags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .flag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 4px 9px;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+
+  .flag.active {
+    background: rgba(96,165,250,0.12);
+    color: var(--blue);
+    border: 1px solid rgba(96,165,250,0.2);
+  }
+
+  .flag.inactive {
+    background: var(--surface2);
+    color: var(--text-dim);
+    border: 1px solid var(--border2);
+    opacity: 0.5;
+  }
+
+  .flag.dnssec {
+    background: rgba(167,139,250,0.12);
+    color: var(--purple);
+    border: 1px solid rgba(167,139,250,0.2);
+  }
+
+  /* Record section */
+  .section {
+    margin-bottom: 20px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .section-count {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text-dim);
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+
+  .record-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .record-row {
+    display: grid;
+    grid-template-columns: auto 60px 70px 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .record-row:last-child { border-bottom: none; }
+  .record-row:hover { background: var(--surface2); }
+
+  .record-row.header-row {
+    background: rgba(246,130,31,0.05);
+  }
+
+  .record-row.header-row:hover { background: rgba(246,130,31,0.05); }
+
+  .cell {
+    padding: 11px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .cell:not(:last-child) {
+    border-right: 1px solid var(--border);
+  }
+
+  .cell.header {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .cell.name {
+    color: var(--text-mid);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cell.type {
+    justify-content: center;
+  }
+
+  .type-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.06em;
+  }
+
+  .type-A    { background: rgba(96,165,250,0.15); color: #60a5fa; }
+  .type-AAAA { background: rgba(129,140,248,0.15); color: #818cf8; }
+  .type-CNAME{ background: rgba(52,211,153,0.15); color: #34d399; }
+  .type-MX   { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .type-TXT  { background: rgba(167,139,250,0.15); color: #a78bfa; }
+  .type-NS   { background: rgba(249,115,22,0.15); color: #f97316; }
+  .type-SOA  { background: rgba(236,72,153,0.15); color: #ec4899; }
+  .type-SRV  { background: rgba(14,165,233,0.15); color: #0ea5e9; }
+  .type-CAA  { background: rgba(163,230,53,0.15); color: #a3e635; }
+  .type-PTR  { background: rgba(232,121,249,0.15); color: #e879f9; }
+  .type-default { background: rgba(156,163,175,0.15); color: #9ca3af; }
+
+  .cell.ttl {
+    color: var(--text-dim);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .cell.data {
+    color: var(--text);
+    word-break: break-all;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  /* No records */
+  .no-records {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+  }
+
+  .no-records-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  .no-records p {
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* Error */
+  .error-card {
+    background: var(--red-dim);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .error-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  .error-message {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--red);
+    line-height: 1.6;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    margin-top: 52px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+
+  footer a {
+    color: var(--cf-orange);
+    text-decoration: none;
+  }
+
+  footer a:hover { opacity: 0.8; }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .record-row {
+      grid-template-columns: auto 55px 60px 1fr;
+    }
+
+    .cell { padding: 10px 10px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-row">
+      <svg class="cf-logo" viewBox="0 0 109 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M72.1698 27.752C71.4348 27.752 70.8398 27.157 70.8398 26.422V15.579C70.8398 14.844 71.4348 14.249 72.1698 14.249C72.9038 14.249 73.4988 14.844 73.4988 15.579V26.422C73.4988 27.157 72.9038 27.752 72.1698 27.752Z" fill="#F6821F"/>
+        <path d="M108.141 21.001C108.141 15.893 104.011 11.763 98.903 11.763C97.0018 11.763 95.232 12.334 93.7583 13.315C92.3618 9.61699 88.7698 6.99899 84.5538 6.99899C83.5198 6.99899 82.5248 7.16499 81.5938 7.46699C79.7608 4.80399 76.7518 3.08699 73.3408 3.08699C70.6178 3.08699 68.1498 4.15099 66.3108 5.89099C64.6388 3.07299 61.5668 1.21399 58.0538 1.21399C52.7328 1.21399 48.4218 5.52499 48.4218 10.846C48.4218 11.116 48.4348 11.383 48.4568 11.647C47.4258 11.228 46.2978 10.999 45.1148 10.999C40.4848 10.999 36.7498 14.734 36.7498 19.364C36.7498 19.634 36.7628 19.901 36.7848 20.165C35.7538 19.746 34.6258 19.517 33.4428 19.517C28.8128 19.517 25.0778 23.252 25.0778 27.882C25.0778 27.926 25.0778 27.97 25.0788 28.013H107.984C108.083 27.045 108.141 25.065 108.141 21.001Z" fill="#FBAD41"/>
+        <path d="M95.7002 28.0131C95.7002 28.0571 95.7002 28.1011 95.7012 28.1451H107.988C108.087 27.1761 108.141 25.1971 108.141 21.1321C108.141 16.0241 104.011 11.8941 98.9032 11.8941C97.0012 11.8941 95.2322 12.4651 93.7582 13.4461C92.3622 9.74809 88.7702 7.12909 84.5542 7.12909C83.5202 7.12909 82.5252 7.29509 81.5942 7.59709" fill="#F6821F"/>
+        <path d="M1.08691 21.001H36.7499C36.7499 16.371 33.0149 12.636 28.3849 12.636C27.6379 12.636 26.9149 12.733 26.2279 12.913C25.5679 9.36599 22.4659 6.66699 18.7289 6.66699C15.1479 6.66699 12.1359 9.17099 11.3509 12.519C10.8159 12.379 10.2539 12.304 9.67491 12.304C5.00291 12.304 1.21191 16.049 1.08691 20.691C1.08691 20.794 1.08691 20.898 1.08691 21.001Z" fill="#FBAD41"/>
+      </svg>
+      <span class="logo-text">1.1.1.1 · DNS over HTTPS</span>
+    </div>
+    <h1>Look<span>upy</span></h1>
+    <p class="subtitle">query any record via cloudflare's encrypted resolver</p>
+  </header>
+
+  <div class="search-card">
+    <div class="input-row">
+      <div class="input-group">
+        <label>Domain</label>
+        <input type="text" id="domainInput" placeholder="example.com" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </div>
+      <div class="input-group" style="flex: 0 0 140px;">
+        <label>Record Type</label>
+        <select id="typeSelect">
+          <option value="A">A</option>
+          <option value="AAAA">AAAA</option>
+          <option value="CNAME">CNAME</option>
+          <option value="MX">MX</option>
+          <option value="TXT">TXT</option>
+          <option value="NS">NS</option>
+          <option value="SOA">SOA</option>
+          <option value="SRV">SRV</option>
+          <option value="CAA">CAA</option>
+          <option value="PTR">PTR</option>
+          <option value="ANY">ANY</option>
+        </select>
+      </div>
+      <button class="btn-lookup" id="lookupBtn" onclick="doLookup()">
+        <span class="spinner"></span>
+        <span class="btn-text">Lookup →</span>
+      </button>
+    </div>
+    <div class="quick-types">
+      <span class="quick-label">Quick:</span>
+      <span class="chip" onclick="quickLookup('A')">A</span>
+      <span class="chip" onclick="quickLookup('AAAA')">AAAA</span>
+      <span class="chip" onclick="quickLookup('MX')">MX</span>
+      <span class="chip" onclick="quickLookup('TXT')">TXT</span>
+      <span class="chip" onclick="quickLookup('NS')">NS</span>
+      <span class="chip" onclick="quickLookup('CNAME')">CNAME</span>
+      <span class="chip" onclick="quickLookup('SOA')">SOA</span>
+    </div>
+  </div>
+
+  <div id="output"></div>
+
+  <footer>
+    Powered by <a href="https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/" target="_blank">Cloudflare 1.1.1.1 DNS over HTTPS</a> &mdash; queries are encrypted end-to-end
+  </footer>
+
+</div>
+
+<script>
+const TYPE_NAMES = {
+  1:'A', 2:'NS', 5:'CNAME', 6:'SOA', 12:'PTR', 15:'MX',
+  16:'TXT', 28:'AAAA', 33:'SRV', 255:'ANY', 257:'CAA',
+  48:'DNSKEY', 46:'RRSIG', 43:'DS', 47:'NSEC'
+};
+
+const RCODE_NAMES = {
+  0:'NOERROR', 1:'FORMERR', 2:'SERVFAIL', 3:'NXDOMAIN',
+  4:'NOTIMP', 5:'REFUSED'
+};
+
+function getTypeName(n) {
+  return TYPE_NAMES[n] || String(n);
+}
+
+function getTypeBadgeClass(name) {
+  const cls = `type-${name}`;
+  const known = ['A','AAAA','CNAME','MX','TXT','NS','SOA','SRV','CAA','PTR'];
+  return known.includes(name) ? cls : 'type-default';
+}
+
+function formatTTL(seconds) {
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.floor(seconds/60)}m`;
+  return `${Math.floor(seconds/3600)}h`;
+}
+
+function quickLookup(type) {
+  document.getElementById('typeSelect').value = type;
+  doLookup();
+}
+
+async function doLookup() {
+  const domain = document.getElementById('domainInput').value.trim();
+  if (!domain) {
+    document.getElementById('domainInput').focus();
+    document.getElementById('domainInput').style.borderColor = 'var(--cf-orange)';
+    setTimeout(() => document.getElementById('domainInput').style.borderColor = '', 600);
+    return;
+  }
+
+  const type = document.getElementById('typeSelect').value;
+  const btn = document.getElementById('lookupBtn');
+  const output = document.getElementById('output');
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  output.innerHTML = '';
+
+  try {
+    const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`;
+    const res = await fetch(url, {
+      headers: { 'Accept': 'application/dns-json' }
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      output.innerHTML = `
+        <div class="error-card">
+          <div class="error-icon">⚠</div>
+          <div class="error-message">${escHtml(data.error)}</div>
+        </div>`;
+      return;
+    }
+
+    renderResults(data, domain, type);
+  } catch(e) {
+    output.innerHTML = `
+      <div class="error-card">
+        <div class="error-icon">⚠</div>
+        <div class="error-message">Failed to fetch DNS records. Check your connection.<br><small style="opacity:0.7">${escHtml(e.message)}</small></div>
+      </div>`;
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+}
+
+function renderResults(data, domain, queryType) {
+  const output = document.getElementById('output');
+  const rcode = data.Status;
+  const rcodeName = RCODE_NAMES[rcode] || `RCODE_${rcode}`;
+  const ok = rcode === 0;
+
+  const answers = data.Answer || [];
+  const authority = data.Authority || [];
+  const additional = data.Additional || [];
+
+  let html = `<div class="results">`;
+
+  // Meta bar
+  html += `<div class="results-meta">
+    <div class="results-title">
+      <span>Query:</span>
+      <strong>${escHtml(domain)}</strong>
+      <span style="color:var(--border2)">·</span>
+      <strong>${escHtml(queryType)}</strong>
+    </div>
+    <span class="status-badge ${ok ? 'ok' : 'err'}">
+      <span class="status-dot"></span>
+      ${rcode} ${rcodeName}
+    </span>
+  </div>`;
+
+  // Flags
+  const flags = [
+    { label: 'RD', value: data.RD, title: 'Recursion Desired' },
+    { label: 'RA', value: data.RA, title: 'Recursion Available' },
+    { label: 'TC', value: data.TC, title: 'Truncated' },
+    { label: 'CD', value: data.CD, title: 'Checking Disabled' },
+    { label: 'AD·DNSSEC', value: data.AD, title: 'Authenticated Data (DNSSEC verified)', special: 'dnssec' },
+  ];
+
+  html += `<div class="flags-row">`;
+  for (const f of flags) {
+    const cls = f.value ? (f.special || 'active') : 'inactive';
+    html += `<span class="flag ${cls}" title="${f.title}">${f.label} ${f.value ? '✓' : '✗'}</span>`;
+  }
+  html += `</div>`;
+
+  // Records sections
+  if (answers.length) {
+    html += renderSection('Answer', answers);
+  }
+  if (authority.length) {
+    html += renderSection('Authority', authority);
+  }
+  if (additional.length) {
+    html += renderSection('Additional', additional);
+  }
+
+  if (!answers.length && !authority.length) {
+    html += `<div class="no-records">
+      <div class="no-records-icon">∅</div>
+      <p>No records found for <strong>${escHtml(domain)}</strong> (${escHtml(queryType)})</p>
+    </div>`;
+  }
+
+  // Comments
+  if (data.Comment) {
+    const comments = Array.isArray(data.Comment) ? data.Comment : [data.Comment];
+    html += `<div style="margin-top:16px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); line-height:1.6;">`;
+    for (const c of comments) {
+      html += `<div>⚑ ${escHtml(c)}</div>`;
+    }
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+  output.innerHTML = html;
+}
+
+function renderSection(label, records) {
+  let html = `<div class="section">
+    <div class="section-header">
+      <span class="section-label">${label}</span>
+      <span class="section-count">${records.length}</span>
+    </div>
+    <div class="record-table">
+      <div class="record-row header-row">
+        <div class="cell header" style="min-width:120px;">Name</div>
+        <div class="cell header" style="justify-content:center;">Type</div>
+        <div class="cell header">TTL</div>
+        <div class="cell header">Data</div>
+      </div>`;
+
+  for (const r of records) {
+    const typeName = getTypeName(r.type);
+    const badgeClass = getTypeBadgeClass(typeName);
+    html += `<div class="record-row">
+      <div class="cell name" style="min-width:120px;" title="${escHtml(r.name)}">${escHtml(r.name)}</div>
+      <div class="cell type"><span class="type-badge ${badgeClass}">${typeName}</span></div>
+      <div class="cell ttl">${formatTTL(r.TTL)}</div>
+      <div class="cell data">${formatData(typeName, escHtml(r.data))}</div>
+    </div>`;
+  }
+
+  html += `</div></div>`;
+  return html;
+}
+
+function formatData(type, data) {
+  // Make IPs, URLs, domains slightly more readable
+  if (type === 'TXT') {
+    return `<span style="color:var(--purple)">${data}</span>`;
+  }
+  if (type === 'MX') {
+    return `<span style="color:var(--yellow)">${data}</span>`;
+  }
+  if (type === 'CNAME' || type === 'NS' || type === 'PTR') {
+    return `<span style="color:var(--green)">${data}</span>`;
+  }
+  if (type === 'AAAA') {
+    return `<span style="color:#818cf8">${data}</span>`;
+  }
+  return data;
+}
+
+function escHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Allow Enter key
+document.getElementById('domainInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLookup();
+});
+
+// Auto-focus
+document.getElementById('domainInput').focus();
+</script>
+</body>
+</html>

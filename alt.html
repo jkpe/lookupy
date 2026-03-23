@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lookupy — Cloudflare DNS (DoH JSON)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --border: #e2e5eb;
+      --text: #111418;
+      --muted: #5c6370;
+      --accent: #f38020;
+      --accent-soft: rgba(243, 128, 32, 0.12);
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+      --sans: "Instrument Sans", system-ui, sans-serif;
+      --radius: 10px;
+      --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    header.hero {
+      margin-bottom: 1.75rem;
+    }
+
+    header.hero h1 {
+      font-size: clamp(1.35rem, 2.5vw, 1.65rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.35rem;
+    }
+
+    header.hero p.lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 52ch;
+    }
+
+    .resolver-notes {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .resolver-notes strong { color: var(--text); font-weight: 600; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1rem;
+    }
+
+    .card h2 {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin: 0 0 1rem;
+    }
+
+    form .grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      form .grid-main {
+        grid-template-columns: 1fr 1fr;
+        align-items: end;
+      }
+      form .grid-main .field-name { grid-column: span 2; }
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      font-family: var(--sans);
+      font-size: 0.9375rem;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fafbfc;
+      color: var(--text);
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid var(--accent-soft);
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
+    .resolver-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--mono);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 0.2rem 0.5rem;
+      background: var(--accent-soft);
+      color: #b45309;
+      border-radius: 6px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.25rem;
+    }
+
+    button[type="submit"],
+    .btn {
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: var(--text);
+      color: #fff;
+    }
+
+    button[type="submit"]:hover,
+    .btn:hover { opacity: 0.92; }
+
+    button[type="submit"]:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { background: #fafbfc; }
+
+    .advanced-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--muted);
+      background: none;
+      border: none;
+      padding: 0.25rem 0;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+
+    .advanced-toggle:hover { color: var(--text); }
+
+    .advanced-toggle .chev {
+      display: inline-block;
+      transition: transform 0.15s ease;
+    }
+
+    .advanced-toggle[aria-expanded="true"] .chev {
+      transform: rotate(90deg);
+    }
+
+    .advanced-panel {
+      display: none;
+      padding-top: 0.75rem;
+      border-top: 1px dashed var(--border);
+      margin-top: 0.75rem;
+    }
+
+    .advanced-panel.open { display: block; }
+
+    .checks {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    @media (min-width: 480px) {
+      .checks { flex-direction: row; flex-wrap: wrap; }
+    }
+
+    .check {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .check input { margin-top: 0.2rem; accent-color: var(--accent); }
+
+    .check span strong { display: block; color: var(--text); }
+
+    .check span small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 400;
+      margin-top: 0.1rem;
+    }
+
+    .custom-type-row {
+      display: none;
+      margin-top: 0.5rem;
+    }
+
+    .custom-type-row.visible { display: block; }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .results-header h2 { margin: 0; }
+
+    .kv {
+      display: grid;
+      gap: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    @media (min-width: 520px) {
+      .kv.cols-2 { grid-template-columns: 140px 1fr; }
+    }
+
+    .kv dt {
+      color: var(--muted);
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .kv dd {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 0.8125rem;
+      word-break: break-all;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      background: #eef1f6;
+      color: #374151;
+      vertical-align: middle;
+    }
+
+    .badge-type { background: #e0f2fe; color: #0369a1; }
+
+    .flag-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .flag {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      padding: 0.25rem 0.45rem;
+      border-radius: 6px;
+      background: #f3f4f6;
+      border: 1px solid var(--border);
+    }
+
+    .flag.on { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+    .flag.off { color: var(--muted); }
+
+    .record-list { display: flex; flex-direction: column; gap: 0.65rem; }
+
+    .record {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 0.85rem;
+      background: #fafbfc;
+    }
+
+    .record-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem 0.65rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .record .data {
+      font-family: var(--mono);
+      font-size: 0.8125rem;
+      word-break: break-all;
+      color: var(--text);
+    }
+
+    .ttl {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .empty-hint {
+      font-size: 0.875rem;
+      color: var(--muted);
+      padding: 0.5rem 0;
+    }
+
+    .section-block + .section-block { margin-top: 1.25rem; }
+
+    .section-block h3 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin: 0 0 0.5rem;
+    }
+
+    .json-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .json-pre {
+      margin: 0;
+      padding: 1rem;
+      border-radius: 8px;
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      line-height: 1.55;
+      overflow-x: auto;
+      max-height: min(420px, 50vh);
+      border: 1px solid #30363d;
+    }
+
+    .json-pre .k { color: #79c0ff; }
+    .json-pre .s { color: #a5d6ff; }
+    .json-pre .n { color: #79b8ff; }
+    .json-pre .b { color: #ff7b72; }
+    .json-pre .null { color: #8b949e; }
+
+    .alert {
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+    }
+
+    .alert-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    .alert-warn {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+
+    .alert-info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+    }
+
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>Lookupy</h1>
+      <p class="lead">
+        Lookupy queries Cloudflare’s public resolver using DNS-over-HTTPS JSON — fast diagnostics for hostnames and record types, with DNSSEC options.
+      </p>
+      <div class="resolver-notes" role="note">
+        <strong>Resolvers</strong> — All use the same JSON API; filtering differs by IP:
+        <br />
+        <strong>1.1.1.1</strong> — Standard public DNS (no filtering).
+        <strong>1.1.1.2</strong> — Malware blocking.
+        <strong>1.1.1.3</strong> — Malware and adult content blocking.
+      </div>
+    </header>
+
+    <section class="card" aria-labelledby="form-heading">
+      <h2 id="form-heading">Query</h2>
+      <form id="lookup-form" novalidate>
+        <div class="grid grid-main">
+          <div class="field">
+            <label for="resolver">Resolver</label>
+            <select id="resolver" name="resolver">
+              <option value="1.1.1.1">1.1.1.1 — standard</option>
+              <option value="1.1.1.2">1.1.1.2 — block malware</option>
+              <option value="1.1.1.3">1.1.1.3 — malware + adult</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="type">Record type</label>
+            <select id="type" name="type">
+              <option value="A">A</option>
+              <option value="AAAA">AAAA</option>
+              <option value="CNAME">CNAME</option>
+              <option value="MX">MX</option>
+              <option value="TXT">TXT</option>
+              <option value="NS">NS</option>
+              <option value="SOA">SOA</option>
+              <option value="PTR">PTR</option>
+              <option value="SRV">SRV</option>
+              <option value="CAA">CAA</option>
+              <option value="__custom__">Custom (text or number)</option>
+            </select>
+            <div id="custom-type-wrap" class="custom-type-row">
+              <label for="type-custom">Custom type</label>
+              <input id="type-custom" type="text" inputmode="numeric" placeholder="e.g. 16 or TXT" autocomplete="off" />
+            </div>
+          </div>
+          <div class="field field-name">
+            <label for="name">Hostname / domain</label>
+            <input id="name" name="name" type="text" placeholder="example.com" autocomplete="off" spellcheck="false" />
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top: 1rem;">
+          <button type="submit" id="submit-btn">Lookup</button>
+          <button type="button" class="advanced-toggle" id="advanced-toggle" aria-expanded="false" aria-controls="advanced-panel">
+            <span class="chev" aria-hidden="true">▸</span>
+            Advanced options
+          </button>
+        </div>
+
+        <div id="advanced-panel" class="advanced-panel" hidden>
+          <div class="checks">
+            <label class="check">
+              <input type="checkbox" id="do" name="do" />
+              <span>
+                <strong>DNSSEC data (<code>do</code>)</strong>
+                <small>Ask for DNSSEC records (RRSIG, DNSKEY, etc.) when available.</small>
+              </span>
+            </label>
+            <label class="check">
+              <input type="checkbox" id="cd" name="cd" />
+              <span>
+                <strong>Disable validation (<code>cd</code>)</strong>
+                <small>Disable DNSSEC validation (still may receive DNSSEC-related data).</small>
+              </span>
+            </label>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <div id="status-banner" class="hidden"></div>
+
+    <section id="results-section" class="hidden" aria-live="polite">
+      <div class="card">
+        <h2>Records</h2>
+        <div id="records-root"></div>
+      </div>
+
+      <div class="card">
+        <div class="results-header">
+          <h2 style="font-size:0.7rem;">Query summary</h2>
+        </div>
+        <dl class="kv cols-2">
+          <dt>Name</dt>
+          <dd id="sum-name">—</dd>
+          <dt>Type</dt>
+          <dd id="sum-type">—</dd>
+          <dt>Resolver</dt>
+          <dd><span class="resolver-pill" id="sum-resolver">—</span></dd>
+          <dt>Request URL</dt>
+          <dd id="sum-url">—</dd>
+        </dl>
+        <div class="json-toolbar" style="margin-top:0.75rem;">
+          <button type="button" class="btn btn-ghost" id="copy-url">Copy URL</button>
+          <button type="button" class="btn btn-ghost" id="copy-curl">Copy curl</button>
+        </div>
+      </div>
+
+      <div class="card" id="response-summary-card">
+        <h2>Response summary</h2>
+        <dl class="kv cols-2">
+          <dt>Status</dt>
+          <dd id="resp-status">—</dd>
+          <dt>Flags</dt>
+          <dd><div class="flag-grid" id="resp-flags"></div></dd>
+        </dl>
+      </div>
+
+      <div class="card" id="diag-card">
+        <h2>Diagnostics / notes</h2>
+        <div id="diag-body"></div>
+      </div>
+
+      <div class="card">
+        <h2>Raw JSON</h2>
+        <div class="json-toolbar">
+          <button type="button" class="btn btn-ghost" id="copy-json">Copy JSON</button>
+        </div>
+        <pre class="json-pre" id="raw-json"></pre>
+      </div>
+    </section>
+
+    <footer>
+      Uses Cloudflare’s <a href="https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/dns-json/" target="_blank" rel="noopener">DNS-over-HTTPS JSON API</a>.
+      For production-critical use, prefer wire-format DoH per Cloudflare’s guidance.
+    </footer>
+  </div>
+
+  <script>
+(function () {
+  "use strict";
+
+  /** @see https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6 */
+  var RCODE_LABELS = {
+    0: "No error",
+    1: "Format error",
+    2: "Server failure",
+    3: "Non-existent domain (NXDOMAIN)",
+    4: "Not implemented",
+    5: "Query refused",
+    6: "Name exists when it should not (YXDOMAIN)",
+    7: "RRset exists when it should not (YXRRSET)",
+    8: "RRset does not exist (NXRRSET)",
+    9: "Not authorized",
+    10: "Name not in zone",
+    16: "BADVERS / BADCOOKIE"
+  };
+
+  var TYPE_NAMES = {
+    1: "A", 2: "NS", 5: "CNAME", 6: "SOA", 12: "PTR", 15: "MX",
+    16: "TXT", 28: "AAAA", 33: "SRV", 257: "CAA"
+  };
+
+  var el = {
+    form: document.getElementById("lookup-form"),
+    resolver: document.getElementById("resolver"),
+    name: document.getElementById("name"),
+    type: document.getElementById("type"),
+    typeCustom: document.getElementById("type-custom"),
+    customWrap: document.getElementById("custom-type-wrap"),
+    do: document.getElementById("do"),
+    cd: document.getElementById("cd"),
+    advancedToggle: document.getElementById("advanced-toggle"),
+    advancedPanel: document.getElementById("advanced-panel"),
+    submitBtn: document.getElementById("submit-btn"),
+    statusBanner: document.getElementById("status-banner"),
+    resultsSection: document.getElementById("results-section"),
+    sumName: document.getElementById("sum-name"),
+    sumType: document.getElementById("sum-type"),
+    sumResolver: document.getElementById("sum-resolver"),
+    sumUrl: document.getElementById("sum-url"),
+    respStatus: document.getElementById("resp-status"),
+    respFlags: document.getElementById("resp-flags"),
+    recordsRoot: document.getElementById("records-root"),
+    diagBody: document.getElementById("diag-body"),
+    diagCard: document.getElementById("diag-card"),
+    rawJson: document.getElementById("raw-json"),
+    copyUrl: document.getElementById("copy-url"),
+    copyCurl: document.getElementById("copy-curl"),
+    copyJson: document.getElementById("copy-json")
+  };
+
+  var state = {
+    resolver: "1.1.1.1",
+    name: "",
+    type: "A",
+    typeCustom: "",
+    do: false,
+    cd: false
+  };
+
+  var lastRequestUrl = "";
+  var lastJsonText = "";
+  var lastParsed = null;
+  var hashUpdateScheduled = false;
+
+  function getEffectiveType() {
+    if (el.type.value === "__custom__") {
+      var t = (el.typeCustom.value || "").trim();
+      return t || "A";
+    }
+    return el.type.value;
+  }
+
+  function syncTypeSelectFromValue(val) {
+    var v = String(val || "A").trim();
+    var opts = Array.prototype.slice.call(el.type.options);
+    var match = opts.find(function (o) { return o.value === v && o.value !== "__custom__"; });
+    if (match) {
+      el.type.value = v;
+      el.customWrap.classList.remove("visible");
+      el.typeCustom.value = "";
+    } else {
+      el.type.value = "__custom__";
+      el.typeCustom.value = v;
+      el.customWrap.classList.add("visible");
+    }
+  }
+
+  function readFormToState() {
+    state.resolver = el.resolver.value;
+    state.name = el.name.value.trim();
+    state.do = el.do.checked;
+    state.cd = el.cd.checked;
+    state.type = getEffectiveType();
+    if (el.type.value === "__custom__") {
+      state.typeCustom = el.typeCustom.value.trim();
+    } else {
+      state.typeCustom = "";
+    }
+  }
+
+  function applyStateToForm() {
+    el.resolver.value = state.resolver;
+    el.name.value = state.name;
+    el.do.checked = state.do;
+    el.cd.checked = state.cd;
+    syncTypeSelectFromValue(state.type);
+  }
+
+  function syncAdvancedPanel() {
+    if (state.do || state.cd) {
+      el.advancedPanel.hidden = false;
+      el.advancedPanel.classList.add("open");
+      el.advancedToggle.setAttribute("aria-expanded", "true");
+    }
+  }
+
+  function buildSearchParamsForApi() {
+    var params = new URLSearchParams();
+    params.set("name", state.name);
+    params.set("type", getEffectiveType());
+    if (state.do) params.set("do", "true");
+    if (state.cd) params.set("cd", "true");
+    return params;
+  }
+
+  function buildHashFromState() {
+    var p = new URLSearchParams();
+    p.set("resolver", state.resolver);
+    p.set("name", state.name);
+    p.set("type", getEffectiveType());
+    p.set("do", state.do ? "1" : "0");
+    p.set("cd", state.cd ? "1" : "0");
+    return "#/" + p.toString();
+  }
+
+  function parseHash() {
+    var raw = window.location.hash.replace(/^#\/?/, "");
+    if (!raw) return null;
+    var search = new URLSearchParams(raw);
+    var resolver = search.get("resolver") || "1.1.1.1";
+    if (!/^1\.1\.1\.[123]$/.test(resolver)) resolver = "1.1.1.1";
+    return {
+      resolver: resolver,
+      name: search.get("name") != null ? search.get("name") : "",
+      type: search.get("type") || "A",
+      do: search.get("do") === "1" || search.get("do") === "true",
+      cd: search.get("cd") === "1" || search.get("cd") === "true"
+    };
+  }
+
+  function applyParsedToState(p) {
+    state.resolver = p.resolver;
+    state.name = p.name;
+    state.type = p.type;
+    state.do = p.do;
+    state.cd = p.cd;
+  }
+
+  function scheduleHashUpdate() {
+    if (hashUpdateScheduled) return;
+    hashUpdateScheduled = true;
+    requestAnimationFrame(function () {
+      hashUpdateScheduled = false;
+      var next = buildHashFromState();
+      if (window.location.hash !== next) {
+        history.replaceState(null, "", next);
+      }
+    });
+  }
+
+  function validateName(name) {
+    if (!name || !name.trim()) {
+      return "Enter a hostname or domain.";
+    }
+    var t = name.trim();
+    if (t.length > 253) {
+      return "Name is too long.";
+    }
+    if (/[\s<>]/.test(t)) {
+      return "Remove spaces or angle brackets from the name.";
+    }
+    return null;
+  }
+
+  function typeLabel(num) {
+    if (typeof num !== "number") return String(num);
+    return TYPE_NAMES[num] || String(num);
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function highlightJson(jsonStr) {
+    return jsonStr.replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      function (match) {
+        var cls = "n";
+        if (/^"/.test(match)) {
+          cls = /:$/.test(match) ? "k" : "s";
+        } else if (/true|false/.test(match)) {
+          cls = "b";
+        } else if (/null/.test(match)) {
+          cls = "null";
+        }
+        return '<span class="' + cls + '">' + match + "</span>";
+      }
+    );
+  }
+
+  function httpErrorMessage(status) {
+    var map = {
+      400: "Bad request — check query parameters (Cloudflare may return a JSON error body).",
+      413: "Payload too large — query string may exceed limits.",
+      415: "Unsupported media type — ensure Accept: application/dns-json.",
+      504: "Gateway timeout — resolver did not respond in time."
+    };
+    return map[status] || "HTTP " + status;
+  }
+
+  function showBanner(html, kind) {
+    el.statusBanner.className = "alert alert-" + (kind || "info");
+    el.statusBanner.innerHTML = html;
+    el.statusBanner.classList.remove("hidden");
+  }
+
+  function hideBanner() {
+    el.statusBanner.classList.add("hidden");
+    el.statusBanner.innerHTML = "";
+  }
+
+  function setLoading(loading) {
+    el.submitBtn.disabled = loading;
+    if (loading) {
+      showBanner('<span class="loading"><span class="spinner" aria-hidden="true"></span> Querying resolver…</span>', "info");
+    } else if (el.statusBanner.textContent.indexOf("Querying") !== -1) {
+      hideBanner();
+    }
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+    } finally {
+      document.body.removeChild(ta);
+    }
+    return Promise.resolve();
+  }
+
+  function renderFlags(data) {
+    var flags = [
+      { key: "AD", val: data.AD, hint: "Authentic data (DNSSEC)" },
+      { key: "CD", val: data.CD, hint: "Checking disabled" },
+      { key: "RD", val: data.RD, hint: "Recursion desired" },
+      { key: "RA", val: data.RA, hint: "Recursion available" },
+      { key: "TC", val: data.TC, hint: "Truncated" }
+    ];
+    el.respFlags.innerHTML = flags
+      .map(function (f) {
+        var on = !!f.val;
+        return (
+          '<span class="flag ' + (on ? "on" : "off") + '" title="' +
+          escapeHtml(f.hint) +
+          '">' +
+          f.key +
+          "=" +
+          (on ? "1" : "0") +
+          "</span>"
+        );
+      })
+      .join("");
+  }
+
+  function renderRecordSection(title, records) {
+    if (!records || !records.length) {
+      return (
+        '<div class="section-block"><h3>' +
+        escapeHtml(title) +
+        '</h3><p class="empty-hint">No ' +
+        escapeHtml(title.toLowerCase()) +
+        " records.</p></div>"
+      );
+    }
+    var html =
+      '<div class="section-block"><h3>' + escapeHtml(title) + " (" + records.length + ")</h3>";
+    html += '<div class="record-list">';
+    records.forEach(function (r) {
+      var t = typeLabel(r.type);
+      html += '<div class="record">';
+      html += '<div class="record-top">';
+      html += '<span class="badge badge-type">' + escapeHtml(t) + "</span>";
+      html += '<span class="badge">' + escapeHtml(r.name || "") + "</span>";
+      if (r.TTL != null) {
+        html += '<span class="ttl">TTL ' + escapeHtml(String(r.TTL)) + "s</span>";
+      }
+      html += "</div>";
+      html += '<div class="data">' + escapeHtml(r.data != null ? String(r.data) : "—") + "</div>";
+      html += "</div>";
+    });
+    html += "</div></div>";
+    return html;
+  }
+
+  function renderDiagnostics(data) {
+    var parts = [];
+    var hasEDE = data.Comment && data.Comment.length;
+    if (hasEDE) {
+      parts.push(
+        "<p><strong>Extended DNS errors (Comment)</strong></p><ul>" +
+          data.Comment.map(function (c) {
+            return "<li>" + escapeHtml(typeof c === "string" ? c : JSON.stringify(c)) + "</li>";
+          }).join("") +
+          "</ul>"
+      );
+    }
+    var noAnswers =
+      (!data.Answer || !data.Answer.length) &&
+      (!data.Authority || !data.Authority.length) &&
+      (!data.Additional || !data.Additional.length);
+    if (noAnswers && data.Status === 0) {
+      parts.push(
+        '<p class="empty-hint">No answers in this response (empty sections are normal for some queries).</p>'
+      );
+    }
+    if (!parts.length && !hasEDE && !noAnswers) {
+      parts.push('<p class="empty-hint">No extra diagnostics.</p>');
+    }
+    el.diagBody.innerHTML = parts.join("") || '<p class="empty-hint">No extra diagnostics.</p>';
+  }
+
+  function displayResults(requestUrl, text, parsed) {
+    lastRequestUrl = requestUrl;
+    lastJsonText = text;
+    lastParsed = parsed;
+
+    el.resultsSection.classList.remove("hidden");
+    el.sumName.textContent = state.name;
+    el.sumType.textContent = getEffectiveType();
+    el.sumResolver.textContent = state.resolver;
+    el.sumUrl.textContent = requestUrl;
+
+    if (parsed && typeof parsed.error === "string") {
+      el.respStatus.innerHTML =
+        '<span class="badge">error</span> ' + escapeHtml(parsed.error);
+      el.respFlags.innerHTML = "";
+      el.recordsRoot.innerHTML =
+        '<p class="empty-hint">Resolver returned an error object instead of an answer payload.</p>';
+      el.diagBody.innerHTML = "";
+      el.rawJson.innerHTML = highlightJson(JSON.stringify(parsed, null, 2));
+      return;
+    }
+
+    if (!parsed || typeof parsed.Status !== "number") {
+      el.respStatus.textContent = "—";
+      el.respFlags.innerHTML = "";
+      el.recordsRoot.innerHTML = '<p class="alert alert-error">Unexpected response shape.</p>';
+      el.rawJson.innerHTML = highlightJson(text);
+      return;
+    }
+
+    var st = parsed.Status;
+    var stLabel = RCODE_LABELS[st] || "Unknown RCODE";
+    el.respStatus.innerHTML =
+      '<span class="badge">' +
+      st +
+      "</span> " +
+      escapeHtml(stLabel);
+
+    renderFlags(parsed);
+
+    var bodyHtml = "";
+    bodyHtml += renderRecordSection("Answer", parsed.Answer);
+    bodyHtml += renderRecordSection("Authority", parsed.Authority);
+    bodyHtml += renderRecordSection("Additional", parsed.Additional);
+    el.recordsRoot.innerHTML = bodyHtml;
+
+    renderDiagnostics(parsed);
+    el.rawJson.innerHTML = highlightJson(JSON.stringify(parsed, null, 2));
+  }
+
+  async function runLookup() {
+    readFormToState();
+    var err = validateName(state.name);
+    if (err) {
+      showBanner('<div class="alert alert-error">' + escapeHtml(err) + "</div>", "error");
+      el.resultsSection.classList.add("hidden");
+      return;
+    }
+
+    hideBanner();
+    setLoading(true);
+
+    var params = buildSearchParamsForApi();
+    var requestUrl =
+      "https://" + state.resolver + "/dns-query?" + params.toString();
+
+    try {
+      var res = await fetch(requestUrl, {
+        method: "GET",
+        headers: { Accept: "application/dns-json" }
+      });
+
+      var text = await res.text();
+      var parsed = null;
+      try {
+        parsed = text ? JSON.parse(text) : null;
+      } catch (e) {
+        parsed = { _parseError: true, raw: text };
+      }
+
+      if (!res.ok) {
+        var msg = httpErrorMessage(res.status);
+        var detail = "";
+        if (parsed && parsed.error) detail = ": " + parsed.error;
+        else if (text && text.length < 500) detail = ": " + text;
+        showBanner(
+          '<div class="alert alert-error"><strong>HTTP ' +
+            res.status +
+            "</strong> — " +
+            escapeHtml(msg) +
+            escapeHtml(detail) +
+            "</div>",
+          "error"
+        );
+        el.resultsSection.classList.remove("hidden");
+        el.sumName.textContent = state.name;
+        el.sumType.textContent = getEffectiveType();
+        el.sumResolver.textContent = state.resolver;
+        el.sumUrl.textContent = requestUrl;
+        el.respStatus.textContent = "—";
+        el.respFlags.innerHTML = "";
+        el.recordsRoot.innerHTML = "";
+        el.diagBody.innerHTML =
+          '<p class="empty-hint">Fix the request or try again. If you opened this file from disk, serve it over HTTP(s) so the browser can call the API.</p>';
+        el.rawJson.innerHTML = highlightJson(
+          parsed && !parsed._parseError ? JSON.stringify(parsed, null, 2) : text
+        );
+        return;
+      }
+
+      if (parsed && parsed._parseError) {
+        showBanner(
+          '<div class="alert alert-warn">Response was not valid JSON.</div>',
+          "warn"
+        );
+        displayResults(requestUrl, text, { error: "Invalid JSON", raw: text });
+        return;
+      }
+
+      hideBanner();
+      displayResults(requestUrl, text, parsed);
+    } catch (e) {
+      var isCors =
+        e instanceof TypeError &&
+        (String(e.message).indexOf("Failed to fetch") !== -1 ||
+          String(e.message).indexOf("NetworkError") !== -1);
+      showBanner(
+        '<div class="alert alert-error"><strong>Request failed</strong> — ' +
+          escapeHtml(isCors ? "Network or CORS error. Serve this page over http(s) (not file://) and retry." : String(e.message)) +
+          "</div>",
+        "error"
+      );
+      el.resultsSection.classList.add("hidden");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function loadFromHash(runQuery) {
+    var parsed = parseHash();
+    if (!parsed) {
+      state.resolver = "1.1.1.1";
+      state.name = "";
+      state.type = "A";
+      state.do = false;
+      state.cd = false;
+      applyStateToForm();
+      if (window.location.hash && window.location.hash !== "#") {
+        history.replaceState(null, "", buildHashFromState());
+      }
+      return;
+    }
+    applyParsedToState(parsed);
+    applyStateToForm();
+    syncAdvancedPanel();
+    if (runQuery && state.name.trim()) {
+      runLookup();
+    }
+  }
+
+  el.form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    readFormToState();
+    scheduleHashUpdate();
+    runLookup();
+  });
+
+  el.advancedToggle.addEventListener("click", function () {
+    var open = el.advancedPanel.classList.toggle("open");
+    el.advancedPanel.hidden = !open;
+    el.advancedToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+
+  el.type.addEventListener("change", function () {
+    if (el.type.value === "__custom__") {
+      el.customWrap.classList.add("visible");
+    } else {
+      el.customWrap.classList.remove("visible");
+    }
+    readFormToState();
+    scheduleHashUpdate();
+  });
+
+  el.typeCustom.addEventListener("input", function () {
+    readFormToState();
+    scheduleHashUpdate();
+  });
+
+  ["resolver", "name", "do", "cd"].forEach(function (id) {
+    document.getElementById(id).addEventListener("change", function () {
+      readFormToState();
+      scheduleHashUpdate();
+    });
+  });
+
+  el.name.addEventListener("input", function () {
+    readFormToState();
+    scheduleHashUpdate();
+  });
+
+  el.copyUrl.addEventListener("click", function () {
+    copyText(lastRequestUrl).catch(function () {});
+  });
+
+  el.copyCurl.addEventListener("click", function () {
+    var curl =
+      "curl -i " +
+      JSON.stringify(lastRequestUrl) +
+      " \\\n  -H " +
+      JSON.stringify("Accept: application/dns-json");
+    copyText(curl).catch(function () {});
+  });
+
+  el.copyJson.addEventListener("click", function () {
+    copyText(lastJsonText || el.rawJson.textContent).catch(function () {});
+  });
+
+  window.addEventListener("hashchange", function () {
+    loadFromHash(true);
+  });
+
+  (function init() {
+    var parsed = parseHash();
+    if (!parsed) {
+      state.resolver = "1.1.1.1";
+      state.name = "";
+      state.type = "A";
+      state.do = false;
+      state.cd = false;
+      applyStateToForm();
+      history.replaceState(null, "", buildHashFromState());
+      return;
+    }
+    loadFromHash(true);
+  })();
+})();
+  </script>
+</body>
+</html>
