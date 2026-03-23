@@ -1,0 +1,26 @@
+# Xcode / iOS
+DerivedData/
+build/
+*.xcuserstate
+*.xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+*.xcarchive
+*.ipa
+*.dSYM/
+*.xcresult/
+
+# CocoaPods
+ios/**/Pods/
+ios/**/Pods.xcodeproj/
+ios/**/Manifest.lock
+
+# Swift Package Manager
+.build/
+Packages/
+
+# Carthage
+Carthage/Build/
+Carthage/Checkouts/
+
+.DS_Store
