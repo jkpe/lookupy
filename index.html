@@ -264,6 +264,78 @@
   .btn-lookup.loading .spinner { display: block; }
   .btn-lookup.loading .btn-text { display: none; }
 
+  /* Resolver row */
+  .resolver-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .resolver-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+
+  .resolver-group {
+    display: flex;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 9px;
+    padding: 3px;
+    gap: 3px;
+  }
+
+  .resolver-btn {
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    padding: 6px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .resolver-btn .r-ip {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .resolver-btn .r-desc {
+    font-size: 9px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    line-height: 1;
+  }
+
+  .resolver-btn:hover:not(.active) {
+    background: var(--border);
+    color: var(--text-mid);
+  }
+
+  .resolver-btn.active {
+    background: var(--cf-orange);
+    color: #fff;
+  }
+
+  .resolver-btn.active .r-desc {
+    opacity: 0.85;
+  }
+
   /* Quick type chips */
   .quick-types {
     display: flex;
@@ -332,6 +404,13 @@
     color: var(--text);
   }
 
+  .results-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
   .status-badge {
     display: inline-flex;
     align-items: center;
@@ -362,6 +441,41 @@
     height: 6px;
     border-radius: 50%;
     background: currentColor;
+  }
+
+  /* View toggle */
+  .view-toggle {
+    display: flex;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .view-btn {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .view-btn:hover:not(.active) {
+    color: var(--text-mid);
+  }
+
+  .view-btn.active {
+    background: var(--surface);
+    border-color: var(--border2);
+    color: var(--text);
   }
 
   /* DNS flags */
@@ -543,6 +657,62 @@
     font-size: 13px;
   }
 
+  /* JSON view */
+  .json-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    animation: fadeUp 0.25s ease both;
+    position: relative;
+  }
+
+  .json-panel pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    white-space: pre;
+    margin: 0;
+    color: var(--text-mid);
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover {
+    border-color: var(--cf-orange);
+    color: var(--cf-orange);
+    background: var(--cf-orange-dim);
+  }
+
+  .copy-btn.copied {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-dim);
+  }
+
+  .json-key    { color: var(--blue); }
+  .json-str    { color: var(--green); }
+  .json-num    { color: var(--yellow); }
+  .json-bool   { color: var(--cf-orange); }
+  .json-null   { color: var(--text-dim); }
+
   /* Error */
   .error-card {
     background: var(--red-dim);
@@ -606,6 +776,10 @@
     }
 
     .cell { padding: 10px 10px; font-size: 11px; }
+
+    .resolver-btn { padding: 5px 10px; }
+    .resolver-btn .r-ip { font-size: 11px; }
+    .resolver-btn .r-desc { display: none; }
   }
 </style>
 </head>
@@ -620,7 +794,7 @@
         <path d="M95.7002 28.0131C95.7002 28.0571 95.7002 28.1011 95.7012 28.1451H107.988C108.087 27.1761 108.141 25.1971 108.141 21.1321C108.141 16.0241 104.011 11.8941 98.9032 11.8941C97.0012 11.8941 95.2322 12.4651 93.7582 13.4461C92.3622 9.74809 88.7702 7.12909 84.5542 7.12909C83.5202 7.12909 82.5252 7.29509 81.5942 7.59709" fill="#F6821F"/>
         <path d="M1.08691 21.001H36.7499C36.7499 16.371 33.0149 12.636 28.3849 12.636C27.6379 12.636 26.9149 12.733 26.2279 12.913C25.5679 9.36599 22.4659 6.66699 18.7289 6.66699C15.1479 6.66699 12.1359 9.17099 11.3509 12.519C10.8159 12.379 10.2539 12.304 9.67491 12.304C5.00291 12.304 1.21191 16.049 1.08691 20.691C1.08691 20.794 1.08691 20.898 1.08691 21.001Z" fill="#FBAD41"/>
       </svg>
-      <span class="logo-text">1.1.1.1 · DNS over HTTPS</span>
+      <span class="logo-text">DNS over HTTPS</span>
     </div>
     <h1>Look<span>upy</span></h1>
     <p class="subtitle">query any record via cloudflare's encrypted resolver</p>
@@ -653,6 +827,25 @@
         <span class="btn-text">Lookup →</span>
       </button>
     </div>
+
+    <div class="resolver-row">
+      <span class="resolver-label">Resolver</span>
+      <div class="resolver-group" id="resolverGroup">
+        <button class="resolver-btn active" data-resolver="1.1.1.1" onclick="selectResolver('1.1.1.1')">
+          <span class="r-ip">1.1.1.1</span>
+          <span class="r-desc">Standard</span>
+        </button>
+        <button class="resolver-btn" data-resolver="1.1.1.2" onclick="selectResolver('1.1.1.2')">
+          <span class="r-ip">1.1.1.2</span>
+          <span class="r-desc">No Malware</span>
+        </button>
+        <button class="resolver-btn" data-resolver="1.1.1.3" onclick="selectResolver('1.1.1.3')">
+          <span class="r-ip">1.1.1.3</span>
+          <span class="r-desc">Family Safe</span>
+        </button>
+      </div>
+    </div>
+
     <div class="quick-types">
       <span class="quick-label">Quick:</span>
       <span class="chip" onclick="quickLookup('A')">A</span>
@@ -685,66 +878,164 @@ const RCODE_NAMES = {
   4:'NOTIMP', 5:'REFUSED'
 };
 
+const RESOLVERS = {
+  '1.1.1.1': { url: 'https://cloudflare-dns.com/dns-query',      label: 'Standard'    },
+  '1.1.1.2': { url: 'https://security.cloudflare-dns.com/dns-query', label: 'No Malware' },
+  '1.1.1.3': { url: 'https://family.cloudflare-dns.com/dns-query',   label: 'Family Safe' },
+};
+
+let activeResolver = '1.1.1.1';
+let lastRawData = null;
+let activeView = 'formatted';
+
+// ── Resolver selection ────────────────────────────────────────────────────────
+
+function selectResolver(ip) {
+  if (!RESOLVERS[ip]) return;
+  activeResolver = ip;
+  document.querySelectorAll('.resolver-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.resolver === ip);
+  });
+}
+
+// ── URL state ─────────────────────────────────────────────────────────────────
+
+function pushState(domain, type, resolver) {
+  const params = new URLSearchParams({ q: domain, t: type, r: resolver });
+  history.pushState({}, '', '?' + params.toString());
+}
+
+function loadFromURL() {
+  const params = new URLSearchParams(location.search);
+  const q = params.get('q');
+  const t = params.get('t');
+  const r = params.get('r');
+
+  if (q) document.getElementById('domainInput').value = q;
+
+  if (t) {
+    const sel = document.getElementById('typeSelect');
+    const match = [...sel.options].find(o => o.value === t.toUpperCase());
+    if (match) sel.value = match.value;
+  }
+
+  if (r && RESOLVERS[r]) selectResolver(r);
+
+  if (q) doLookup(true);
+}
+
+// ── View toggle ───────────────────────────────────────────────────────────────
+
+function setView(v) {
+  activeView = v;
+  const fmtEl = document.getElementById('formatted-view');
+  const jsonEl = document.getElementById('json-view');
+  if (!fmtEl || !jsonEl) return;
+  fmtEl.style.display = v === 'formatted' ? '' : 'none';
+  jsonEl.style.display = v === 'json' ? '' : 'none';
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === v);
+  });
+}
+
+// ── JSON syntax highlighting ──────────────────────────────────────────────────
+
+function highlightJSON(obj) {
+  const raw = JSON.stringify(obj, null, 2);
+  return raw
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      match => {
+        if (/^"/.test(match)) {
+          return /:$/.test(match)
+            ? `<span class="json-key">${match}</span>`
+            : `<span class="json-str">${match}</span>`;
+        }
+        if (/true|false/.test(match)) return `<span class="json-bool">${match}</span>`;
+        if (/null/.test(match))       return `<span class="json-null">${match}</span>`;
+        return `<span class="json-num">${match}</span>`;
+      }
+    );
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function getTypeName(n) {
   return TYPE_NAMES[n] || String(n);
 }
 
 function getTypeBadgeClass(name) {
-  const cls = `type-${name}`;
   const known = ['A','AAAA','CNAME','MX','TXT','NS','SOA','SRV','CAA','PTR'];
-  return known.includes(name) ? cls : 'type-default';
+  return known.includes(name) ? `type-${name}` : 'type-default';
 }
 
 function formatTTL(seconds) {
-  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 60)   return `${seconds}s`;
   if (seconds < 3600) return `${Math.floor(seconds/60)}m`;
   return `${Math.floor(seconds/3600)}h`;
 }
+
+function escHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Quick lookup ──────────────────────────────────────────────────────────────
 
 function quickLookup(type) {
   document.getElementById('typeSelect').value = type;
   doLookup();
 }
 
-async function doLookup() {
+// ── Main lookup ───────────────────────────────────────────────────────────────
+
+async function doLookup(fromURL = false) {
   const domain = document.getElementById('domainInput').value.trim();
   if (!domain) {
-    document.getElementById('domainInput').focus();
-    document.getElementById('domainInput').style.borderColor = 'var(--cf-orange)';
-    setTimeout(() => document.getElementById('domainInput').style.borderColor = '', 600);
+    const inp = document.getElementById('domainInput');
+    inp.focus();
+    inp.style.borderColor = 'var(--cf-orange)';
+    setTimeout(() => inp.style.borderColor = '', 600);
     return;
   }
 
-  const type = document.getElementById('typeSelect').value;
-  const btn = document.getElementById('lookupBtn');
-  const output = document.getElementById('output');
+  const type    = document.getElementById('typeSelect').value;
+  const btn     = document.getElementById('lookupBtn');
+  const output  = document.getElementById('output');
+
+  if (!fromURL) pushState(domain, type, activeResolver);
 
   btn.disabled = true;
   btn.classList.add('loading');
   output.innerHTML = '';
 
   try {
-    const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`;
-    const res = await fetch(url, {
-      headers: { 'Accept': 'application/dns-json' }
-    });
-
+    const baseURL = RESOLVERS[activeResolver].url;
+    const url = `${baseURL}?name=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`;
+    const res = await fetch(url, { headers: { 'Accept': 'application/dns-json' } });
     const data = await res.json();
 
     if (data.error) {
       output.innerHTML = `
         <div class="error-card">
-          <div class="error-icon">⚠</div>
+          <div class="error-icon">&#9888;</div>
           <div class="error-message">${escHtml(data.error)}</div>
         </div>`;
       return;
     }
 
+    lastRawData = data;
+    activeView = 'formatted';
     renderResults(data, domain, type);
   } catch(e) {
     output.innerHTML = `
       <div class="error-card">
-        <div class="error-icon">⚠</div>
+        <div class="error-icon">&#9888;</div>
         <div class="error-message">Failed to fetch DNS records. Check your connection.<br><small style="opacity:0.7">${escHtml(e.message)}</small></div>
       </div>`;
   } finally {
@@ -753,15 +1044,17 @@ async function doLookup() {
   }
 }
 
-function renderResults(data, domain, queryType) {
-  const output = document.getElementById('output');
-  const rcode = data.Status;
-  const rcodeName = RCODE_NAMES[rcode] || `RCODE_${rcode}`;
-  const ok = rcode === 0;
+// ── Render ────────────────────────────────────────────────────────────────────
 
-  const answers = data.Answer || [];
+function renderResults(data, domain, queryType) {
+  const output    = document.getElementById('output');
+  const rcode     = data.Status;
+  const rcodeName = RCODE_NAMES[rcode] || `RCODE_${rcode}`;
+  const ok        = rcode === 0;
+
+  const answers   = data.Answer    || [];
   const authority = data.Authority || [];
-  const additional = data.Additional || [];
+  const additional= data.Additional|| [];
 
   let html = `<div class="results">`;
 
@@ -770,13 +1063,21 @@ function renderResults(data, domain, queryType) {
     <div class="results-title">
       <span>Query:</span>
       <strong>${escHtml(domain)}</strong>
-      <span style="color:var(--border2)">·</span>
+      <span style="color:var(--border2)">&#xB7;</span>
       <strong>${escHtml(queryType)}</strong>
+      <span style="color:var(--border2)">&#xB7;</span>
+      <span style="color:var(--text-dim)">${escHtml(activeResolver)}</span>
     </div>
-    <span class="status-badge ${ok ? 'ok' : 'err'}">
-      <span class="status-dot"></span>
-      ${rcode} ${rcodeName}
-    </span>
+    <div class="results-right">
+      <span class="status-badge ${ok ? 'ok' : 'err'}">
+        <span class="status-dot"></span>
+        ${rcode} ${rcodeName}
+      </span>
+      <div class="view-toggle">
+        <button class="view-btn active" data-view="formatted" onclick="setView('formatted')">Formatted</button>
+        <button class="view-btn" data-view="json" onclick="setView('json')">JSON</button>
+      </div>
+    </div>
   </div>`;
 
   // Flags
@@ -785,45 +1086,48 @@ function renderResults(data, domain, queryType) {
     { label: 'RA', value: data.RA, title: 'Recursion Available' },
     { label: 'TC', value: data.TC, title: 'Truncated' },
     { label: 'CD', value: data.CD, title: 'Checking Disabled' },
-    { label: 'AD·DNSSEC', value: data.AD, title: 'Authenticated Data (DNSSEC verified)', special: 'dnssec' },
+    { label: 'AD&#xB7;DNSSEC', value: data.AD, title: 'Authenticated Data (DNSSEC verified)', special: 'dnssec' },
   ];
 
   html += `<div class="flags-row">`;
   for (const f of flags) {
     const cls = f.value ? (f.special || 'active') : 'inactive';
-    html += `<span class="flag ${cls}" title="${f.title}">${f.label} ${f.value ? '✓' : '✗'}</span>`;
+    html += `<span class="flag ${cls}" title="${f.title}">${f.label} ${f.value ? '&#x2713;' : '&#x2717;'}</span>`;
   }
   html += `</div>`;
 
-  // Records sections
-  if (answers.length) {
-    html += renderSection('Answer', answers);
-  }
-  if (authority.length) {
-    html += renderSection('Authority', authority);
-  }
-  if (additional.length) {
-    html += renderSection('Additional', additional);
-  }
+  // Formatted view
+  html += `<div id="formatted-view">`;
+
+  if (answers.length)    html += renderSection('Answer',     answers);
+  if (authority.length)  html += renderSection('Authority',  authority);
+  if (additional.length) html += renderSection('Additional', additional);
 
   if (!answers.length && !authority.length) {
     html += `<div class="no-records">
-      <div class="no-records-icon">∅</div>
+      <div class="no-records-icon">&#x2205;</div>
       <p>No records found for <strong>${escHtml(domain)}</strong> (${escHtml(queryType)})</p>
     </div>`;
   }
 
-  // Comments
   if (data.Comment) {
     const comments = Array.isArray(data.Comment) ? data.Comment : [data.Comment];
     html += `<div style="margin-top:16px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); line-height:1.6;">`;
-    for (const c of comments) {
-      html += `<div>⚑ ${escHtml(c)}</div>`;
-    }
+    for (const c of comments) html += `<div>&#x2691; ${escHtml(c)}</div>`;
     html += `</div>`;
   }
 
-  html += `</div>`;
+  html += `</div>`; // #formatted-view
+
+  // JSON view (hidden by default)
+  html += `<div id="json-view" style="display:none">
+    <div class="json-panel">
+      <button class="copy-btn" id="copyBtn" onclick="copyJSON()">Copy</button>
+      <pre>${highlightJSON(data)}</pre>
+    </div>
+  </div>`;
+
+  html += `</div>`; // .results
   output.innerHTML = html;
 }
 
@@ -842,7 +1146,7 @@ function renderSection(label, records) {
       </div>`;
 
   for (const r of records) {
-    const typeName = getTypeName(r.type);
+    const typeName   = getTypeName(r.type);
     const badgeClass = getTypeBadgeClass(typeName);
     html += `<div class="record-row">
       <div class="cell name" style="min-width:120px;" title="${escHtml(r.name)}">${escHtml(r.name)}</div>
@@ -857,38 +1161,39 @@ function renderSection(label, records) {
 }
 
 function formatData(type, data) {
-  // Make IPs, URLs, domains slightly more readable
-  if (type === 'TXT') {
-    return `<span style="color:var(--purple)">${data}</span>`;
-  }
-  if (type === 'MX') {
-    return `<span style="color:var(--yellow)">${data}</span>`;
-  }
-  if (type === 'CNAME' || type === 'NS' || type === 'PTR') {
-    return `<span style="color:var(--green)">${data}</span>`;
-  }
-  if (type === 'AAAA') {
-    return `<span style="color:#818cf8">${data}</span>`;
-  }
+  if (type === 'TXT')                          return `<span style="color:var(--purple)">${data}</span>`;
+  if (type === 'MX')                           return `<span style="color:var(--yellow)">${data}</span>`;
+  if (type === 'CNAME' || type === 'NS' || type === 'PTR') return `<span style="color:var(--green)">${data}</span>`;
+  if (type === 'AAAA')                         return `<span style="color:#818cf8">${data}</span>`;
   return data;
 }
 
-function escHtml(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+// ── Copy JSON ─────────────────────────────────────────────────────────────────
+
+async function copyJSON() {
+  if (!lastRawData) return;
+  await navigator.clipboard.writeText(JSON.stringify(lastRawData, null, 2));
+  const btn = document.getElementById('copyBtn');
+  if (!btn) return;
+  btn.textContent = 'Copied!';
+  btn.classList.add('copied');
+  setTimeout(() => {
+    btn.textContent = 'Copy';
+    btn.classList.remove('copied');
+  }, 2000);
 }
 
-// Allow Enter key
+// ── Init ──────────────────────────────────────────────────────────────────────
+
 document.getElementById('domainInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLookup();
 });
 
-// Auto-focus
-document.getElementById('domainInput').focus();
+loadFromURL();
+
+if (!location.search) {
+  document.getElementById('domainInput').focus();
+}
 </script>
 </body>
 </html>
