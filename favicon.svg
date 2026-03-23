@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="1000"><g clip-path="url(#SvgjsClipPath1077)"><rect width="1000" height="1000" fill="#000000"></rect><g transform="matrix(3.888888888888889,0,0,3.888888888888889,150,150)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180"><defs>
+    <radialGradient id="bg" cx="42%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#171920"></stop>
+      <stop offset="100%" stop-color="#0a0b0f"></stop>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f6821f" stop-opacity="0.12"></stop>
+      <stop offset="100%" stop-color="#f6821f" stop-opacity="0"></stop>
+    </radialGradient>
+    <linearGradient id="orange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f6821f"></stop>
+      <stop offset="100%" stop-color="#ffb347"></stop>
+    </linearGradient>
+    <filter id="blur-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"></feGaussianBlur>
+      <feMerge>
+        <feMergeNode in="blur"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+  <clipPath id="SvgjsClipPath1077"><rect width="1000" height="1000" x="0" y="0" rx="350" ry="350"></rect></clipPath></defs><rect width="180" height="180" fill="url(#bg)"></rect><circle cx="78" cy="75" r="62" fill="url(#glow)"></circle><circle cx="78" cy="75" r="42" fill="none" stroke="url(#orange)" stroke-width="13" filter="url(#blur-glow)"></circle><line x1="108" y1="105" x2="154" y2="151" stroke="url(#orange)" stroke-width="13" stroke-linecap="round" filter="url(#blur-glow)"></line><line x1="56" y1="64" x2="98" y2="64" stroke="#f6821f" stroke-width="3.5" stroke-linecap="round" opacity="0.35"></line><line x1="56" y1="75" x2="100" y2="75" stroke="#f6821f" stroke-width="3.5" stroke-linecap="round" opacity="0.55"></line><line x1="56" y1="86" x2="88" y2="86" stroke="#f6821f" stroke-width="3.5" stroke-linecap="round" opacity="0.35"></line></svg></g></g></svg>
