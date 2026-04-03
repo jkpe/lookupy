@@ -9,7 +9,10 @@ Live site: [lookupy.top](https://lookupy.top/)
 | Path | Purpose |
 |------|---------|
 | Root (`index.html`, assets) | Static web app |
-| `ios/src/` | Native iOS wrapper around the same experience |
+| `www/` | Generated copy of those assets for Capacitor (created by `npm run build:web`; gitignored) |
+| `ios/` | Capacitor iOS project (`App.xcworkspace` under `ios/App/`) |
+| `android/` | Capacitor Android project |
+| `ios-legacy/` | Previous native Swift/WebView wrapper (not used by Capacitor) |
 | `screenshots/` | Next.js page for App Store marketing screenshots |
 
 ## Local preview
@@ -21,3 +24,16 @@ npx serve .
 ```
 
 No build step is required for the main site.
+
+## Capacitor (iOS & Android)
+
+The static UI is copied into `www/` and synced into the native projects.
+
+```bash
+npm install
+npm run cap:sync    # copies web assets + updates native projects (runs CocoaPods on macOS)
+npx cap open ios    # open ios/App/App.xcworkspace in Xcode
+npx cap open android
+```
+
+After editing `index.html` or root assets, run `npm run cap:sync` again before building in Xcode or Android Studio.

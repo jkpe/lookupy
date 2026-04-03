@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "app-store-screenshots": {
+      "source": "ParthJadhav/app-store-screenshots",
+      "sourceType": "github",
+      "computedHash": "dc42167e4da1b28105d1ab39d20919099cfdda7885004f5bdf0a1bf73ff9074e"
+    },
+    "capacitor-best-practices": {
+      "source": "cap-go/capacitor-skills",
+      "sourceType": "github",
+      "computedHash": "9da56403dfd57025245e260d63d5ed3dcd74982ee8858f3b2186c396c25fac3d"
+    },
+    "capacitor-plugins": {
+      "source": "cap-go/capacitor-skills",
+      "sourceType": "github",
+      "computedHash": "2e2f4d88795630cdf2096f82ea50506d6db9958034d3827a7a4d0730ec922386"
+    }
+  }
+}

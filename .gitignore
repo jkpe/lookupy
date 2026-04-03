@@ -1,3 +1,7 @@
+# Node / Capacitor web bundle
+node_modules/
+www/
+
 # Xcode / iOS
 DerivedData/
 build/
@@ -24,3 +28,5 @@ Carthage/Build/
 Carthage/Checkouts/
 
 .DS_Store
+
+ios-legacy/*
