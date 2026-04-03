@@ -796,7 +796,7 @@
       <span class="logo-text">DNS over HTTPS</span>
     </div>
     <h1>Look<span>upy</span></h1>
-    <p class="subtitle">query any record via <span style="color:var(--cf-orange)">cloudflare's</span> encrypted resolver</p>
+    <p class="subtitle">query any record via <span style="color:var(--cf-orange)">Cloudflare</span> or <span style="color:#4285f4">Google</span> encrypted resolvers</p>
   </header>
 
   <div class="search-card">
@@ -842,6 +842,10 @@
           <span class="r-ip">1.1.1.3</span>
           <span class="r-desc">Family Safe</span>
         </button>
+        <button class="resolver-btn" data-resolver="8.8.8.8" onclick="selectResolver('8.8.8.8')">
+          <span class="r-ip">8.8.8.8</span>
+          <span class="r-desc">Google</span>
+        </button>
       </div>
     </div>
 
@@ -860,7 +864,7 @@
   <div id="output"></div>
 
   <footer>
-    <p>Powered by <a href="https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/" target="_blank" rel="noopener noreferrer">Cloudflare 1.1.1.1 DNS over HTTPS</a> &mdash; queries are encrypted end-to-end</p>
+    <p>Powered by <a href="https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/" target="_blank" rel="noopener noreferrer">Cloudflare 1.1.1.1 DoH</a> and <a href="https://developers.google.com/speed/public-dns/docs/doh/json" target="_blank" rel="noopener noreferrer">Google Public DNS</a> &mdash; queries use HTTPS</p>
     <p>Made by <a href="https://www.jackpearce.co.uk/" target="_blank" rel="noopener noreferrer">Jack Pearce</a> ♥ · <a href="https://github.com/jkpe/lookupy" target="_blank" rel="noopener noreferrer">Open source on GitHub</a></p>
   </footer>
 
@@ -879,9 +883,10 @@ const RCODE_NAMES = {
 };
 
 const RESOLVERS = {
-  '1.1.1.1': { url: 'https://cloudflare-dns.com/dns-query',      label: 'Standard'    },
-  '1.1.1.2': { url: 'https://security.cloudflare-dns.com/dns-query', label: 'No Malware' },
-  '1.1.1.3': { url: 'https://family.cloudflare-dns.com/dns-query',   label: 'Family Safe' },
+  '1.1.1.1': { url: 'https://cloudflare-dns.com/dns-query',      label: 'Standard',    headers: { Accept: 'application/dns-json' } },
+  '1.1.1.2': { url: 'https://security.cloudflare-dns.com/dns-query', label: 'No Malware', headers: { Accept: 'application/dns-json' } },
+  '1.1.1.3': { url: 'https://family.cloudflare-dns.com/dns-query',   label: 'Family Safe', headers: { Accept: 'application/dns-json' } },
+  '8.8.8.8': { url: 'https://dns.google/resolve', label: 'Google' },
 };
 
 let activeResolver = '1.1.1.1';
@@ -1015,9 +1020,9 @@ async function doLookup(fromURL = false) {
   output.innerHTML = '';
 
   try {
-    const baseURL = RESOLVERS[activeResolver].url;
-    const url = `${baseURL}?name=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/dns-json' } });
+    const cfg = RESOLVERS[activeResolver];
+    const url = `${cfg.url}?name=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`;
+    const res = await fetch(url, cfg.headers ? { headers: cfg.headers } : {});
     const data = await res.json();
 
     if (data.error) {
